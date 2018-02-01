@@ -1,0 +1,17 @@
+{
+  "name": "penplot-experiment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test1.js",
+  "dependencies": {
+    "noisejs": "^2.1.0",
+    "convex-hull": "^1.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
