@@ -20,6 +20,9 @@ export default function createPlot (context, dimensions) {
   const radiusNoise = new Noise(Math.random())
   const radiusNoiseScale = 20;
 
+  const ringGapProb = 0.00;
+  const ringContinueProb = 0.08;
+
   const pointNoises = [
     {
       magnitude: 0.5,
@@ -32,7 +35,7 @@ export default function createPlot (context, dimensions) {
       noise: new Noise(Math.random())
     },
     {
-      magnitude: 0.08,
+      magnitude: 0.04,
       scale: 2,
       noise: new Noise(Math.random())
     }
@@ -51,30 +54,54 @@ export default function createPlot (context, dimensions) {
   for (let j = 0; j < count; j++) {
     radii.push(radii[j]+spacing(j))
     const r = radii[j] + (radiusNoise.simplex2(0, j/radiusNoiseScale))*radiusNoiseMagnitude;
-    const circle = [];
     const steps = 2 * Math.PI * r * stepsPerCm;
     const phase = 2*Math.PI*Math.random()
+    const circle = []
+    let inRing = Math.random() > ringGapProb;
     for (let i = 0; i < steps; i++) {
-      const t = i / steps;
-      const angle = Math.PI * 2 * t;
-      const position = [
-        width / 2 + Math.cos(angle) * r,
-        height / 2 + Math.sin(angle) * r
-      ]
-      let localNoise = 0;
-      for (let i in pointNoises) {
-        const noise = pointNoises[i];
-        localNoise += noise.magnitude*noise.noise.simplex2(position[0]/noise.scale, position[1]/noise.scale);
+      if (
+        (inRing && Math.random() > ringGapProb) ||
+        (!inRing && Math.random() < ringContinueProb)
+      ) {
+        inRing = true
+        const t = i / steps;
+        const angle = Math.PI * 2 * t;
+        const position = [
+          width / 2 + Math.cos(angle) * r,
+          height / 2 + Math.sin(angle) * r
+        ]
+        let localNoise = 0;
+        for (let i in pointNoises) {
+          const noise = pointNoises[i];
+          localNoise += noise.magnitude*noise.noise.simplex2(position[0]/noise.scale, position[1]/noise.scale);
+        }
+          
+        circle.push([
+          position[0] + Math.cos(angle) * localNoise,
+          position[1] + Math.sin(angle) * localNoise
+        ]);
+      } else {
+        inRing = false;
+        circle.push(null);
       }
-        
-      circle.push([
-        position[0] + Math.cos(angle) * localNoise,
-        position[1] + Math.sin(angle) * localNoise
-      ]);
     }
     circle.push(circle[0])
-    lines.push(circle);
+
+    let segment = []
+    for (let i in circle) {
+      const point = circle[i]
+      if (point) {
+        segment.push(point)
+      } else if (segment.length > 0) {
+        lines.push(segment)
+        segment = []
+      }
+    }
+    if (segment.length > 0) {
+      lines.push(segment);
+    }
   }
+  console.log(lines)
 
   // Clip all the lines to a margin
   const margin = 1.5;
