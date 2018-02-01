@@ -11,23 +11,38 @@ export default function createPlot (context, dimensions) {
   let lines = [];
 
   // Draw some circles expanding outward
-  const stepsPerCm = 10;
+  const stepsPerCm = 20;
   const count = 40;
   const spacingConstant = 0.15;
-  const radius = 0;
-  const radiusNoise = 0.4;
-  const pointNoise = 0.3;
-  const noise = new Noise(Math.random())
-  const noise2 = new Noise(Math.random())
-  const noise3 = new Noise(Math.random())
-  const pointNoiseScale = 7;
+  const radius = 0.1;
+
+  const radiusNoiseMagnitude = 0.4;
+  const radiusNoise = new Noise(Math.random())
   const radiusNoiseScale = 20;
+
+  const pointNoises = [
+    {
+      magnitude: 0.5,
+      scale: 20,
+      noise: new Noise(Math.random())
+    },
+    {
+      magnitude: 0.3,
+      scale: 7,
+      noise: new Noise(Math.random())
+    },
+    {
+      magnitude: 0.08,
+      scale: 2,
+      noise: new Noise(Math.random())
+    }
+  ]
 
   const spacing = (ringNumber) => {
     if (ringNumber > 20) {
       return spacingConstant;
     } else {
-      return (-1*Math.pow(ringNumber/20, 2)+2)*spacingConstant
+      return (-1*Math.pow(ringNumber/20, 2)/2+1.5)*spacingConstant
     }
   }
 
@@ -35,7 +50,7 @@ export default function createPlot (context, dimensions) {
 
   for (let j = 0; j < count; j++) {
     radii.push(radii[j]+spacing(j))
-    const r = radii[j+1] + (noise2.simplex2(0, j/radiusNoiseScale))*radiusNoise;
+    const r = radii[j] + (radiusNoise.simplex2(0, j/radiusNoiseScale))*radiusNoiseMagnitude;
     const circle = [];
     const steps = 2 * Math.PI * r * stepsPerCm;
     const phase = 2*Math.PI*Math.random()
@@ -46,7 +61,12 @@ export default function createPlot (context, dimensions) {
         width / 2 + Math.cos(angle) * r,
         height / 2 + Math.sin(angle) * r
       ]
-      const localNoise = pointNoise*noise.simplex2(position[0]/pointNoiseScale, position[1]/pointNoiseScale)
+      let localNoise = 0;
+      for (let i in pointNoises) {
+        const noise = pointNoises[i];
+        localNoise += noise.magnitude*noise.noise.simplex2(position[0]/noise.scale, position[1]/noise.scale);
+      }
+        
       circle.push([
         position[0] + Math.cos(angle) * localNoise,
         position[1] + Math.sin(angle) * localNoise
