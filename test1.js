@@ -12,30 +12,34 @@ export default function createPlot (context, dimensions) {
 
   // Draw some circles expanding outward
   const stepsPerCm = 40;
-  const count = 70;
-  const spacingConstant = 0.05;
+  const count = 20;
+  const spacingConstant = 0.12;
   const radius = 0.1;
 
-  const radiusNoiseMagnitude = 0.4;
+  const radiusNoiseMagnitude = 1;
   const radiusNoise = new Noise(Math.random())
-  const radiusNoiseScale = 20;
+  const radiusNoiseScale = 10;
 
-  const ringGapProb = 0.02;
-  const ringContinueProb = 1;
+  const ringGapProb = 0.005;
+  const ringContinueProb = 0.02;
+
+  const heightScale = 0.9;
+  const yNoiseScale = 15;
+  const radiusYNoiseScale = 100;
 
   const pointNoises = [
     {
-      magnitude: 0.5,
-      scale: 20,
+      magnitude: 1,
+      scale: 50,
+      noise: new Noise(Math.random())
+    },
+    {
+      magnitude: 2,
+      scale: 8,
       noise: new Noise(Math.random())
     },
     {
       magnitude: 0.3,
-      scale: 7,
-      noise: new Noise(Math.random())
-    },
-    {
-      magnitude: 0.04,
       scale: 2,
       noise: new Noise(Math.random())
     }
@@ -51,42 +55,69 @@ export default function createPlot (context, dimensions) {
 
   const radii = [radius]
 
-  for (let j = 0; j < count; j++) {
-    radii.push(radii[j]+spacing(j))
-    const r = radii[j] + (radiusNoise.simplex2(0, j/radiusNoiseScale))*radiusNoiseMagnitude;
-    const steps = 2 * Math.PI * r * stepsPerCm;
-    const phase = 2*Math.PI*Math.random()
-    const circle = []
-    let inRing = Math.random() > ringGapProb;
-    for (let i = 0; i < steps; i++) {
-      if (
-        (inRing && Math.random() > ringGapProb) ||
-        (!inRing && Math.random() < ringContinueProb)
-      ) {
-        inRing = true
-        const t = i / steps;
-        const angle = Math.PI * 2 * t + phase;
-        const position = [
-          width / 2 + Math.cos(angle) * r,
-          height / 2 + Math.sin(angle) * r
-        ]
-        let localNoise = 0;
-        for (let i in pointNoises) {
-          const noise = pointNoises[i];
-          localNoise += noise.magnitude*noise.noise.simplex2(position[0]/noise.scale, position[1]/noise.scale);
+  const drawRingsAtY = (lines, y) => {
+    const xOffset = (Math.random()-0.5)*0.2
+    for (let j = 0; j < count; j++) {
+      radii.push(radii[j]+spacing(j))
+      const r = radii[j] + (radiusNoise.simplex3(0, j/radiusNoiseScale, (y/radiusNoiseScale)/radiusYNoiseScale))*radiusNoiseMagnitude;
+      const steps = 2 * Math.PI * r * stepsPerCm;
+      const phase = 2*Math.PI*Math.random()
+      const circle = []
+      let inRing = Math.random() > ringGapProb;
+      for (let i = 0; i < steps; i++) {
+        if (
+          (inRing && Math.random() > ringGapProb) ||
+          (!inRing && Math.random() < ringContinueProb)
+        ) {
+          inRing = true
+          const t = i / steps;
+          const angle = Math.PI * 2 * t + phase;
+          const position = [
+            width/2 + Math.cos(angle) * r,
+            height/2 + Math.sin(angle) * r
+          ]
+          let localNoise = 0;
+          for (let i in pointNoises) {
+            const noise = pointNoises[i];
+            localNoise += noise.magnitude*noise.noise.simplex3(position[0]/noise.scale, position[1]/noise.scale, (y/noise.scale)/yNoiseScale);
+          }
+            
+          circle.push([
+            position[0] + Math.cos(angle) * localNoise,
+            position[1] + Math.sin(angle) * localNoise
+          ]);
+        } else {
+          inRing = false;
+          circle.push(null);
         }
-          
-        circle.push([
-          position[0] + Math.cos(angle) * localNoise,
-          position[1] + Math.sin(angle) * localNoise
-        ]);
-      } else {
-        inRing = false;
-        circle.push(null);
+      }
+      // circle.push(circle[0])
+
+      let segment = []
+      for (let i in circle) {
+        const point = circle[i]
+        if (point) {
+          segment.push(point)
+        } else if (segment.length > 0) {
+          segment.map((p) => p[1] = p[1]*0.5 + 0.25*height)
+          segment.map((p) => p[0] += xOffset)
+          const verticalOffset = height/2 - y*heightScale
+          segment.map((p) => p[1] += verticalOffset)
+          lines.push(segment)
+          segment = []
+        }
+      }
+      if (segment.length > 0) {
+        segment.map((p) => p[1] = p[1]*0.5 + 0.25*height)
+        segment.map((p) => p[0] += xOffset)
+        const verticalOffset = height/2 - y*heightScale
+        segment.map((p) => p[1] += verticalOffset)
+        lines.push(segment);
       }
     }
-    // circle.push(circle[0])
+  }
 
+  const splitImages = (circle) => {
     const numImages = 4;
     let segment = []
     for (let i in circle) {
@@ -108,6 +139,12 @@ export default function createPlot (context, dimensions) {
       lines.push(segment);
     }
   }
+
+  drawRingsAtY(lines, 5);
+  drawRingsAtY(lines, 10);
+  drawRingsAtY(lines, 15);
+  drawRingsAtY(lines, 20);
+  drawRingsAtY(lines, 25);
   console.log(lines)
 
   // Clip all the lines to a margin
