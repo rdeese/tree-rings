@@ -12,7 +12,7 @@ export default function createPlot (context, dimensions) {
 
   // Draw some circles expanding outward
   const stepsPerCm = 40;
-  const count = 40;
+  const count = 20;
   const spacingConstant = 0.15;
   const radius = 0.1;
 
@@ -20,8 +20,8 @@ export default function createPlot (context, dimensions) {
   const radiusNoise = new Noise(Math.random())
   const radiusNoiseScale = 20;
 
-  const ringGapProb = 0.01;
-  const ringContinueProb = 0.08;
+  const ringGapProb = 0.1;
+  const ringContinueProb = 1;
 
   const pointNoises = [
     {
@@ -94,9 +94,9 @@ export default function createPlot (context, dimensions) {
         segment.push(point)
       } else if (segment.length > 0) {
         if (Math.random() > 0.5) {
-          segment.map((p) => p[0] -=4)
+          segment.map((p) => p[0] -=5)
         } else {
-          segment.map((p) => p[0] +=4)
+          segment.map((p) => p[0] +=5)
         }
         lines.push(segment)
         segment = []
@@ -104,9 +104,9 @@ export default function createPlot (context, dimensions) {
     }
     if (segment.length > 0) {
       if (Math.random() > 0.5) {
-        segment.map((p) => p[0] -=4)
+        segment.map((p) => p[0] -=5)
       } else {
-        segment.map((p) => p[0] +=4)
+        segment.map((p) => p[0] +=5)
       }
       lines.push(segment);
     }
