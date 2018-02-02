@@ -3,7 +3,7 @@ import { polylinesToSVG } from 'penplot/util/svg';
 import { clipPolylinesToBox } from 'penplot/util/geom';
 import { Noise } from 'noisejs';
 
-export const orientation = Orientation.LANDSCAPE;
+export const orientation = Orientation.PORTRAIT;
 export const dimensions = PaperSize.LETTER;
 
 export default function createPlot (context, dimensions) {
@@ -12,15 +12,15 @@ export default function createPlot (context, dimensions) {
 
   // Draw some circles expanding outward
   const stepsPerCm = 40;
-  const count = 20;
-  const spacingConstant = 0.15;
+  const count = 70;
+  const spacingConstant = 0.05;
   const radius = 0.1;
 
   const radiusNoiseMagnitude = 0.4;
   const radiusNoise = new Noise(Math.random())
   const radiusNoiseScale = 20;
 
-  const ringGapProb = 0.1;
+  const ringGapProb = 0.02;
   const ringContinueProb = 1;
 
   const pointNoises = [
@@ -87,27 +87,24 @@ export default function createPlot (context, dimensions) {
     }
     // circle.push(circle[0])
 
+    const numImages = 4;
     let segment = []
     for (let i in circle) {
       const point = circle[i]
       if (point) {
         segment.push(point)
       } else if (segment.length > 0) {
-        if (Math.random() > 0.5) {
-          segment.map((p) => p[0] -=5)
-        } else {
-          segment.map((p) => p[0] +=5)
-        }
+        segment.map((p) => p[1] = p[1]*0.25 + 0.375*height)
+        const verticalOffset = (Math.round(numImages*Math.random())-0.5*numImages)*0.7*height/numImages;
+        segment.map((p) => p[1] += verticalOffset)
         lines.push(segment)
         segment = []
       }
     }
     if (segment.length > 0) {
-      if (Math.random() > 0.5) {
-        segment.map((p) => p[0] -=5)
-      } else {
-        segment.map((p) => p[0] +=5)
-      }
+      segment.map((p) => p[1] = p[1]*0.25 + 0.375*height)
+      const verticalOffset = (Math.floor(numImages*Math.random())-0.5*numImages)*0.7*height/numImages;
+      segment.map((p) => p[1] += verticalOffset)
       lines.push(segment);
     }
   }
