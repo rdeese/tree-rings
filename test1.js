@@ -11,7 +11,7 @@ export default function createPlot (context, dimensions) {
   let lines = [];
 
   // Draw some circles expanding outward
-  const stepsPerCm = 20;
+  const stepsPerCm = 40;
   const count = 40;
   const spacingConstant = 0.15;
   const radius = 0.1;
@@ -20,7 +20,7 @@ export default function createPlot (context, dimensions) {
   const radiusNoise = new Noise(Math.random())
   const radiusNoiseScale = 20;
 
-  const ringGapProb = 0.00;
+  const ringGapProb = 0.01;
   const ringContinueProb = 0.08;
 
   const pointNoises = [
@@ -65,7 +65,7 @@ export default function createPlot (context, dimensions) {
       ) {
         inRing = true
         const t = i / steps;
-        const angle = Math.PI * 2 * t;
+        const angle = Math.PI * 2 * t + phase;
         const position = [
           width / 2 + Math.cos(angle) * r,
           height / 2 + Math.sin(angle) * r
@@ -85,7 +85,7 @@ export default function createPlot (context, dimensions) {
         circle.push(null);
       }
     }
-    circle.push(circle[0])
+    // circle.push(circle[0])
 
     let segment = []
     for (let i in circle) {
@@ -93,11 +93,21 @@ export default function createPlot (context, dimensions) {
       if (point) {
         segment.push(point)
       } else if (segment.length > 0) {
+        if (Math.random() > 0.5) {
+          segment.map((p) => p[0] -=4)
+        } else {
+          segment.map((p) => p[0] +=4)
+        }
         lines.push(segment)
         segment = []
       }
     }
     if (segment.length > 0) {
+      if (Math.random() > 0.5) {
+        segment.map((p) => p[0] -=4)
+      } else {
+        segment.map((p) => p[0] +=4)
+      }
       lines.push(segment);
     }
   }
