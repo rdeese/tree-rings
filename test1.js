@@ -178,11 +178,12 @@ export default function createPlot (context, dimensions) {
     return drawVerticalLine(Math.floor(Math.random()*count), Math.PI * 2 * Math.random(), start, end)
   }
 
-  drawRingsAtY(lines, 5);
-  drawRingsAtY(lines, 10);
-  drawRingsAtY(lines, 15);
-  drawRingsAtY(lines, 20);
-  drawRingsAtY(lines, 25);
+  const centerY = height/2
+  drawRingsAtY(lines, centerY - 10);
+  drawRingsAtY(lines, centerY - 5);
+  drawRingsAtY(lines, centerY);
+  drawRingsAtY(lines, centerY + 5);
+  drawRingsAtY(lines, centerY + 10);
   // for (let i = 0; i < 50; i++) {
   //   lines.push(drawRandomVerticalLine())
   // }
