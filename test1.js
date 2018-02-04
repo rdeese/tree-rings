@@ -27,6 +27,12 @@ export default function createPlot (context, dimensions) {
   const yNoiseScale = 15;
   const radiusYNoiseScale = 100;
 
+  const positionNoise = {
+    magnitude: 1,
+    scale: 50,
+    noise: new Noise(Math.random())
+  }
+
   const pointNoises = [
     {
       magnitude: 1,
@@ -54,11 +60,13 @@ export default function createPlot (context, dimensions) {
   }
 
   const radii = [radius]
+  for (let j = 0; j < count; j++) {
+    radii.push(radii[j]+spacing(j))
+  }
 
   const drawRingsAtY = (lines, y) => {
-    const xOffset = (Math.random()-0.5)*0.2
+    const xOffset = positionNoise.magnitude*positionNoise.noise.simplex2(0, y/positionNoise.scale)
     for (let j = 0; j < count; j++) {
-      radii.push(radii[j]+spacing(j))
       const r = radii[j] + (radiusNoise.simplex3(0, j/radiusNoiseScale, (y/radiusNoiseScale)/radiusYNoiseScale))*radiusNoiseMagnitude;
       const steps = 2 * Math.PI * r * stepsPerCm;
       const phase = 2*Math.PI*Math.random()
@@ -81,9 +89,9 @@ export default function createPlot (context, dimensions) {
             const noise = pointNoises[i];
             localNoise += noise.magnitude*noise.noise.simplex3(position[0]/noise.scale, position[1]/noise.scale, (y/noise.scale)/yNoiseScale);
           }
-            
+
           circle.push([
-            position[0] + Math.cos(angle) * localNoise,
+            position[0] + Math.cos(angle) * localNoise + xOffset,
             position[1] + Math.sin(angle) * localNoise
           ]);
         } else {
@@ -100,8 +108,7 @@ export default function createPlot (context, dimensions) {
           segment.push(point)
         } else if (segment.length > 0) {
           segment.map((p) => p[1] = p[1]*0.5 + 0.25*height)
-          segment.map((p) => p[0] += xOffset)
-          const verticalOffset = height/2 - y*heightScale
+          const verticalOffset = y - height/2
           segment.map((p) => p[1] += verticalOffset)
           lines.push(segment)
           segment = []
@@ -109,8 +116,7 @@ export default function createPlot (context, dimensions) {
       }
       if (segment.length > 0) {
         segment.map((p) => p[1] = p[1]*0.5 + 0.25*height)
-        segment.map((p) => p[0] += xOffset)
-        const verticalOffset = height/2 - y*heightScale
+        const verticalOffset = y - height/2
         segment.map((p) => p[1] += verticalOffset)
         lines.push(segment);
       }
@@ -140,11 +146,46 @@ export default function createPlot (context, dimensions) {
     }
   }
 
+  const drawVerticalLine = (ringNumber, angle, startHeight, endHeight) => {
+    console.log(startHeight, endHeight)
+    const vertLine = [];
+    for (let y = startHeight; y < endHeight; y += 1/stepsPerCm) {
+      const xOffset = positionNoise.magnitude*positionNoise.noise.simplex2(0, y/positionNoise.scale)
+      const r = radii[ringNumber] + (radiusNoise.simplex3(0, ringNumber/radiusNoiseScale, (y/radiusNoiseScale)/radiusYNoiseScale))*radiusNoiseMagnitude;
+
+      const position = [
+        width/2 + Math.cos(angle) * r,
+        height/2 + Math.sin(angle) * r
+      ]
+      let localNoise = 0;
+      for (let i in pointNoises) {
+        const noise = pointNoises[i];
+        localNoise += noise.magnitude*noise.noise.simplex3(position[0]/noise.scale, position[1]/noise.scale, (y/noise.scale)/yNoiseScale);
+      }
+
+      vertLine.push([
+        position[0] + Math.cos(angle) * localNoise + xOffset,
+        y + Math.sin(angle) * localNoise
+      ]);
+    }
+    return vertLine;
+  }
+
+  const drawRandomVerticalLine = () => {
+    const start = Math.random()*height*3/4 + height/4
+    const end = (height*3/4-start)*Math.random() + start
+    console.log(start, end)
+    return drawVerticalLine(Math.floor(Math.random()*count), Math.PI * 2 * Math.random(), start, end)
+  }
+
   drawRingsAtY(lines, 5);
   drawRingsAtY(lines, 10);
   drawRingsAtY(lines, 15);
   drawRingsAtY(lines, 20);
   drawRingsAtY(lines, 25);
+  // for (let i = 0; i < 50; i++) {
+  //   lines.push(drawRandomVerticalLine())
+  // }
   console.log(lines)
 
   // Clip all the lines to a margin
